@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH
 wget https://download.pytorch.org/models/translate/iwslt14/data.tar.gz
 tar -xvzf data.tar.gz
 rm -rf checkpoints data.tar.gz && mkdir -p checkpoints
-CUDA_VISIBLE_DEVICES=0 python3 pytorch_translate/train.py \
+CUDA_VISIBLE_DEVICES=0 python3.6 pytorch_translate/train.py \
    "" \
    --arch rnn \
    --log-verbose \
