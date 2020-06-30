@@ -74,6 +74,11 @@ from pytorch_translate import semi_supervised  # noqa; noqa
 from pytorch_translate import char_source_model  # noqa; noqa
 from pytorch_translate import char_source_transformer_model  # noqa; noqa
 
+import logging
+import os
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
 
 def get_parser_with_args(default_task="pytorch_translate"):
     parser = options.get_parser("Trainer", default_task=default_task)
