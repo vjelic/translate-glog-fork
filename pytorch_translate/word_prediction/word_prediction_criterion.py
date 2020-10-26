@@ -140,8 +140,7 @@ class _BasePredictionCriterion(abc.ABC, LabelSmoothedCrossEntropyCriterion):
 
 @register_criterion("word_prediction")
 class WordPredictionCriterion(_BasePredictionCriterion):
-    """Implements a combined loss from translation and target words prediction.
-    """
+    """Implements a combined loss from translation and target words prediction."""
 
     def predictor_loss_function(self, prediction, target):
         """Loss function that maximizes the confidence of the true positive.
@@ -154,7 +153,7 @@ class WordPredictionCriterion(_BasePredictionCriterion):
         Returns:
             loss: Loss as a torch.Variable
         """
-        return -prediction.gather(dim=-1, index=target)
+        return -(prediction.gather(dim=-1, index=target))
 
 
 @register_criterion("warp_loss")

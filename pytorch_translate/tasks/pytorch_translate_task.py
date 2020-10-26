@@ -9,7 +9,7 @@ from fairseq import data, options
 from fairseq.data import ConcatDataset, LanguagePairDataset, NoisingDataset
 from fairseq.data.multi_corpus_sampled_dataset import MultiCorpusSampledDataset
 from fairseq.data.noising import UnsupervisedMTNoising
-from fairseq.tasks import FairseqTask, register_task
+from fairseq.tasks import LegacyFairseqTask, register_task
 from pytorch_translate import constants, utils as pytorch_translate_utils
 from pytorch_translate.data import (
     char_data,
@@ -25,7 +25,7 @@ from pytorch_translate.research.multisource import multisource_data
 
 
 @register_task("pytorch_translate")
-class PytorchTranslateTask(FairseqTask):
+class PytorchTranslateTask(LegacyFairseqTask):
     @staticmethod
     def add_args(parser):
         """Add task-specific arguments to the parser."""
@@ -195,8 +195,10 @@ class PytorchTranslateTask(FairseqTask):
                 corpus.target.data_file
             )
         else:
-            dst_dataset = pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
-                corpus.target.data_file, is_npz=is_npz
+            dst_dataset = (
+                pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
+                    corpus.target.data_file, is_npz=is_npz
+                )
             )
 
         if getattr(self.args, "reverse_target", None):
@@ -228,8 +230,10 @@ class PytorchTranslateTask(FairseqTask):
                 weights=weights_dataset,
             )
         else:
-            src_dataset = pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
-                corpus.source.data_file, is_npz=is_npz
+            src_dataset = (
+                pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
+                    corpus.source.data_file, is_npz=is_npz
+                )
             )
             if getattr(self.args, "train_weights_path", None):
                 self.datasets[split] = weighted_data.WeightedLanguagePairDataset(
@@ -290,8 +294,10 @@ class PytorchTranslateTask(FairseqTask):
                     tgt
                 )
             else:
-                tgt_dataset = pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
-                    tgt, is_npz=is_npz
+                tgt_dataset = (
+                    pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
+                        tgt, is_npz=is_npz
+                    )
                 )
 
             if self.char_source_dict is not None:
@@ -299,8 +305,10 @@ class PytorchTranslateTask(FairseqTask):
                     src
                 )
             else:
-                src_dataset = pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
-                    src, is_npz=is_npz
+                src_dataset = (
+                    pytorch_translate_data.InMemoryIndexedDataset.create_from_file(
+                        src, is_npz=is_npz
+                    )
                 )
             src_sizes = src_dataset.sizes
             if noiser is not None and key in noiser:
@@ -597,7 +605,7 @@ class PytorchTranslateTask(FairseqTask):
 
 
 # We don't @register_task since this is mostly used for unit tests and export
-class DictionaryHolderTask(FairseqTask):
+class DictionaryHolderTask(LegacyFairseqTask):
     """A simplified Task that just holds the dictionaries."""
 
     def __init__(self, src_dict, dst_dict):

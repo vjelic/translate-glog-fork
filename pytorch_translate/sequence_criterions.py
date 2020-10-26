@@ -21,7 +21,13 @@ class BaseSequenceLossCriterion(LegacyFairseqCriterion):
     def __init__(self, args, src_dict, dst_dict):
         super().__init__(args, src_dict, dst_dict)
         self.translator = None
-        self.scorer = bleu.Scorer(dst_dict.pad(), dst_dict.eos(), dst_dict.unk())
+        self.scorer = bleu.Scorer(
+            bleu.BleuConfig(
+                pad=dst_dict.pad(),
+                eos=dst_dict.eos(),
+                unk=dst_dict.unk(),
+            )
+        )
 
     def get_translator(self, model):
         """Get lazy singleton translator instance."""
@@ -133,7 +139,7 @@ class BaseSequenceLossCriterion(LegacyFairseqCriterion):
                 prev_output_tokens=prev_output_tokens[f:t],
             )
             lprobs = model.get_normalized_probs(net_output, log_probs=True)
-            nll_loss = -lprobs.gather(dim=-1, index=translations[f:t].unsqueeze(2))
+            nll_loss = -(lprobs.gather(dim=-1, index=translations[f:t].unsqueeze(2)))
             non_pad_mask = translations[f:t].ne(self.padding_idx).float()
             all_losses.append(torch.sum(nll_loss.squeeze(2) * non_pad_mask, dim=1))
         return torch.cat(all_losses).view(bsz, beam_size)

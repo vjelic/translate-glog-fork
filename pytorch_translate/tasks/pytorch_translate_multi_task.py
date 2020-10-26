@@ -28,6 +28,9 @@ class PyTorchTranslateMultiTask(MultilingualTranslationTask):
         num_shards=1,
         shard_id=0,
         num_workers=0,
+        epoch=1,
+        data_buffer_size=0,
+        disable_iterator_cache=False,
     ):
         assert isinstance(dataset, FairseqDataset)
 
@@ -37,10 +40,7 @@ class PyTorchTranslateMultiTask(MultilingualTranslationTask):
 
         # filter examples that are too large
         indices = data_utils.filter_by_size(
-            indices,
-            dataset,
-            max_positions,
-            raise_exception=(not ignore_invalid_inputs),
+            indices, dataset, max_positions, raise_exception=(not ignore_invalid_inputs)
         )
 
         # create mini-batches with given size constraints

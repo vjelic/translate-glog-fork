@@ -208,12 +208,16 @@ def set_default_args(args):
         )
 
     if args.arch in constants.ARCHS_FOR_CHAR_SOURCE and not args.char_source_vocab_file:
-        args.char_source_vocab_file = pytorch_translate_dictionary.default_char_dictionary_path(
-            save_dir=args.save_dir, dialect=args.source_lang
+        args.char_source_vocab_file = (
+            pytorch_translate_dictionary.default_char_dictionary_path(
+                save_dir=args.save_dir, dialect=args.source_lang
+            )
         )
     if args.arch in constants.ARCHS_FOR_CHAR_TARGET and not args.char_target_vocab_file:
-        args.char_target_vocab_file = pytorch_translate_dictionary.default_char_dictionary_path(
-            save_dir=args.save_dir, dialect=args.target_lang
+        args.char_target_vocab_file = (
+            pytorch_translate_dictionary.default_char_dictionary_path(
+                save_dir=args.save_dir, dialect=args.target_lang
+            )
         )
 
     if args.multiling_encoder_lang and not args.multiling_source_vocab_file:
@@ -415,8 +419,7 @@ def setup_training_state(args, trainer, task, epoch_itr):
 
 
 def build_trainer(args, task, model, criterion, trainer_class):
-    """ Build trainer with provided trainer_class, and set up training state.
-    """
+    """Build trainer with provided trainer_class, and set up training state."""
     # Build trainer
     trainer = trainer_class(args, task, model, criterion)
 
@@ -424,14 +427,14 @@ def build_trainer(args, task, model, criterion, trainer_class):
         f"| training on {args.distributed_world_size} total GPUs "
         f"({torch.cuda.device_count()} GPUs locally on this machine).\n"
         f"| max tokens per GPU = {args.max_tokens} and \
-        max sentences per GPU = {args.max_sentences}",
+        max sentences per GPU = {args.batch_size}",
         flush=True,
     )
 
     epoch_itr = task.get_batch_iterator(
         dataset=task.dataset(args.train_subset),
         max_tokens=args.max_tokens,
-        max_sentences=args.max_sentences,
+        max_sentences=args.batch_size,
         max_positions=utils.resolve_max_positions(
             task.max_positions(), model.max_positions()
         ),
@@ -446,7 +449,7 @@ def build_trainer(args, task, model, criterion, trainer_class):
 
 
 def setup_training(args, trainer_class=None):
-    """ Perform several steps:
+    """Perform several steps:
     - build model using provided criterion and task
     - load data
     - build trainer

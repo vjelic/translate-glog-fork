@@ -312,9 +312,11 @@ class CharCNNEncoder(FairseqEncoder):
 
         self.unk_only_char_encoding = unk_only_char_encoding
         if self.unk_only_char_encoding:
-            assert char_cnn_output_dim == token_embed_dim, (
-                "char_cnn_output_dim (%d) must equal to token_embed_dim (%d)"
-                % (char_cnn_output_dim, token_embed_dim)
+            assert (
+                char_cnn_output_dim == token_embed_dim
+            ), "char_cnn_output_dim (%d) must equal to token_embed_dim (%d)" % (
+                char_cnn_output_dim,
+                token_embed_dim,
             )
             self.word_dim = token_embed_dim
         else:
@@ -336,7 +338,7 @@ class CharCNNEncoder(FairseqEncoder):
         self.set_embed_noising_mode(False)
 
     def set_gradient_tracking_mode(self, mode=True):
-        """ This allows AdversarialTrainer to turn on retrain_grad when
+        """This allows AdversarialTrainer to turn on retrain_grad when
         running adversarial example generation model."""
         self.tracker.reset()
         self.track_gradients = mode

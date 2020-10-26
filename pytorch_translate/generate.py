@@ -206,14 +206,20 @@ def _generate_score(models, args, task, dataset, modify_target_dict):
     # Generate and compute BLEU score
     dst_dict = task.target_dictionary
     if args.sacrebleu:
-        scorer = bleu.SacrebleuScorer()
+        scorer = bleu.SacrebleuScorer(bleu.SacrebleuConfig())
     else:
-        scorer = bleu.Scorer(dst_dict.pad(), dst_dict.eos(), dst_dict.unk())
+        scorer = bleu.Scorer(
+            bleu.BleuConfig(
+                pad=dst_dict.pad(),
+                eos=dst_dict.eos(),
+                unk=dst_dict.unk(),
+            )
+        )
 
     itr = task.get_batch_iterator(
         dataset=dataset,
         max_tokens=args.max_tokens,
-        max_sentences=args.max_sentences,
+        max_sentences=args.batch_size,
         max_positions=utils.resolve_max_positions(
             task.max_positions(), *[model.max_positions() for model in models]
         ),
@@ -226,7 +232,13 @@ def _generate_score(models, args, task, dataset, modify_target_dict):
 
     oracle_scorer = None
     if args.report_oracle_bleu:
-        oracle_scorer = bleu.Scorer(dst_dict.pad(), dst_dict.eos(), dst_dict.unk())
+        oracle_scorer = bleu.Scorer(
+            bleu.BleuConfig(
+                pad=dst_dict.pad(),
+                eos=dst_dict.eos(),
+                unk=dst_dict.unk(),
+            )
+        )
 
     rescorer = None
     num_sentences = 0
@@ -330,7 +342,7 @@ def _generate_score(models, args, task, dataset, modify_target_dict):
                 for hypo in hypos:
                     print(
                         task.tgt_dict.string(
-                            hypo["tokens"], bpe_symbol=args.remove_bpe
+                            hypo["tokens"], bpe_symbol=args.post_process
                         ),
                         file=out_file,
                     )
@@ -348,7 +360,13 @@ def smoothed_sentence_bleu(task, target_tokens, hypo_tokens):
     http://acl2014.org/acl2014/W14-33/pdf/W14-3346.pdf
     """
     dst_dict = task.target_dictionary
-    scorer = bleu.Scorer(dst_dict.pad(), dst_dict.eos(), dst_dict.unk())
+    scorer = bleu.Scorer(
+        bleu.BleuConfig(
+            pad=dst_dict.pad(),
+            eos=dst_dict.eos(),
+            unk=dst_dict.unk(),
+        )
+    )
     scorer.add(target_tokens, hypo_tokens)
 
     invcnt = 1
@@ -429,9 +447,9 @@ def _iter_translations(
             src_str = dataset.src.get_original_text(sample_id)
             target_str = dataset.tgt.get_original_text(sample_id)
         else:
-            src_str = src_dict.string(src_tokens, args.remove_bpe)
+            src_str = src_dict.string(src_tokens, args.post_process)
             target_str = target_dict.string(
-                target_tokens, args.remove_bpe, escape_unk=True
+                target_tokens, args.post_process, escape_unk=True
             )
 
         if not args.quiet:
@@ -455,7 +473,7 @@ def _iter_translations(
                 else None,
                 align_dict=align_dict,
                 tgt_dict=task.target_dictionary,
-                remove_bpe=args.remove_bpe,
+                remove_bpe=args.post_process,
             )
 
             if not args.quiet:
@@ -475,7 +493,7 @@ def _iter_translations(
                     best_hypo_score = score
 
             if i == 0:
-                if align_dict is not None or args.remove_bpe is not None:
+                if align_dict is not None or args.post_process is not None:
                     # Convert back to tokens for evaluation with unk replacement
                     # and/or without BPE
                     target_tokens = task.target_dictionary.encode_line(
@@ -688,7 +706,11 @@ def validate_args(args):
 def generate(args):
     pytorch_translate_options.print_args(args)
 
-    models, model_args, task = pytorch_translate_utils.load_diverse_ensemble_for_inference(
+    (
+        models,
+        model_args,
+        task,
+    ) = pytorch_translate_utils.load_diverse_ensemble_for_inference(
         args.path.split(CHECKPOINT_PATHS_DELIMITER)
     )
     args.source_lang = model_args[0].source_lang
